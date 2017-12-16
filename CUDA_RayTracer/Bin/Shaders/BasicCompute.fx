@@ -1,30 +1,13 @@
 //--------------------------------------------------------------------------------------
 // BasicCompute.fx
 // Direct3D 11 Shader Model 5.0 Demo
-// Copyright (c) Stefan Petersson, 2013
+// Copyright (c) Stefan Petersson, 2012
 //--------------------------------------------------------------------------------------
 
-RWStructuredBuffer<int> output : register(u0);
+RWTexture2D<float4> output : register(u0);
 
-cbuffer cbComputationData : register(b0)
+[numthreads(32, 32, 1)]
+void main( uint3 threadID : SV_DispatchThreadID )
 {
-	uint numBlocksX;
-	uint numBlocksY;
-};
-
-
-// For info, see http://msdn.microsoft.com/en-us/library/windows/desktop/ff476405(v=vs.85).aspx
-
-[numthreads(NUM_THREADS_X, NUM_THREADS_Y, 1)]
-void main(
-	uint3 DispatchThreadID	: SV_DispatchThreadID,
-	uint3 GroupThreadID		: SV_GroupThreadID,
-	uint3 GroupID			: SV_GroupID,
-	uint  GroupIndex		: SV_GroupIndex
-	)
-{
-	//calculate 1D output index
-	int outputIndex = (GroupID.y * numBlocksX + GroupID.x) * (NUM_THREADS_X * NUM_THREADS_Y) + GroupIndex;
-
-	output[outputIndex] = pow(outputIndex, 2);
+	output[threadID.xy] = float4(float3(1,0,1) * (1 - length(threadID.xy - float2(400, 400)) / 400.0f), 1);
 }

@@ -1,9 +1,7 @@
 //--------------------------------------------------------------------------------------
-// File: ComputeHelp.cpp
+// Real-Time JPEG Compression using DirectCompute - Demo
 //
-// BTH-D3D-Template
-//
-// Copyright (c) Stefan Petersson 2013. All rights reserved.
+// Copyright (c) Stefan Petersson 2012. All rights reserved.
 //--------------------------------------------------------------------------------------
 #include "ComputeHelp.h"
 #include <cstdio>
@@ -457,7 +455,6 @@ ID3D11Buffer* ComputeWrap::CreateConstantBuffer(UINT uSize, VOID* pInitData, cha
     if(pInitData)
     {
         D3D11_SUBRESOURCE_DATA InitData;
-		memset(&InitData, 0, sizeof(InitData));
         InitData.pSysMem = pInitData;
         mD3DDevice->CreateBuffer(&cbDesc, &InitData, &pBuffer);
     }
@@ -482,7 +479,7 @@ void ComputeWrap::SetDebugName(ID3D11DeviceChild* object, char* debugName)
 #endif
 }
 
-ComputeShader* ComputeWrap::CreateComputeShader(TCHAR* shaderFile, TCHAR* blobFileAppendix, char* pFunctionName, D3D_SHADER_MACRO* pDefines)
+ComputeShader* ComputeWrap::CreateComputeShader(TCHAR* shaderFile, TCHAR* blobFileAppendix, char* pFunctionName, D3D10_SHADER_MACRO* pDefines)
 {
 	ComputeShader* cs = new ComputeShader();
 

@@ -9,7 +9,7 @@
       <UniqueIdentifier>{5a019eb5-8829-4938-a79d-34e625c72da3}</UniqueIdentifier>
     </Filter>
     <Filter Include="Headers">
-      <UniqueIdentifier>{15f3b19a-8991-4286-b262-c1712e9b214a}</UniqueIdentifier>
+      <UniqueIdentifier>{d0de0d1a-1664-4a44-b81b-9f2fb40b83c3}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -24,13 +24,13 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="stdafx.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
     <ClInclude Include="D3D11Timer.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="ComputeHelp.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="stdafx.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\tinyobjloader\tiny_obj_loader.h">

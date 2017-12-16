@@ -1,9 +1,7 @@
 //--------------------------------------------------------------------------------------
-// File: ComputeHelp.h
+// Real-Time JPEG Compression using DirectCompute - Demo
 //
-// BTH-D3D-Template
-//
-// Copyright (c) Stefan Petersson 2013. All rights reserved.
+// Copyright (c) Stefan Petersson 2012. All rights reserved.
 //--------------------------------------------------------------------------------------
 #pragma once
 
@@ -177,7 +175,7 @@ public:
 		mD3DDeviceContext = d3dContext;
 	}
 
-	ComputeShader* CreateComputeShader(TCHAR* shaderFile, TCHAR* blobFileAppendix, char* pFunctionName, D3D_SHADER_MACRO* pDefines);
+	ComputeShader* CreateComputeShader(TCHAR* shaderFile, TCHAR* blobFileAppendix, char* pFunctionName, D3D10_SHADER_MACRO* pDefines);
 
 	ID3D11Buffer* CreateConstantBuffer(UINT uSize, VOID* pInitData, char* debugName = nullptr);
 

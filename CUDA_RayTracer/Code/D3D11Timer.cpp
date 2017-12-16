@@ -1,10 +1,3 @@
-//--------------------------------------------------------------------------------------
-// File: D3D11Timer.cpp
-//
-// BTH-D3D-Template
-//
-// Copyright (c) Stefan Petersson 2013. All rights reserved.
-//--------------------------------------------------------------------------------------
 #include "D3D11Timer.h"
 
 D3D11Timer::D3D11Timer(ID3D11Device* d3dDevice, ID3D11DeviceContext* d3dDeviceContext)
