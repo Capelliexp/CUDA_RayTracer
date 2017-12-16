@@ -8,12 +8,13 @@
 // Note: For this demo complete/correct error managment is left out.
 //--------------------------------------------------------------------------------------
 #include "stdafx.h"
-
 #include "ComputeHelp.h"
 #include "D3D11Timer.h"
+#include "../tinyobjloader/tiny_obj_loader.h"
 
 #include <string>
 #include <iostream>
+
 using namespace std;
 
 /*	DirectXTex library - for usage info, see http://directxtex.codeplex.com/

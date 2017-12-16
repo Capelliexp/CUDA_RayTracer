@@ -1,0 +1,19 @@
+bool rayVsAABB(Ray ray, float3 pbounds[2])
+{
+    float3 invdir = 1.0f / ray.dir.xyz;
+ 
+    float t1 = (pbounds[0].x - ray.origin.x)*invdir.x;
+    float t2 = (pbounds[1].x - ray.origin.x)*invdir.x;
+    float t3 = (pbounds[0].y - ray.origin.y)*invdir.y;
+    float t4 = (pbounds[1].y - ray.origin.y)*invdir.y;
+    float t5 = (pbounds[0].z - ray.origin.z)*invdir.z;
+    float t6 = (pbounds[1].z - ray.origin.z)*invdir.z;
+ 
+    float tmin = max(max(min(t1, t2), min(t3, t4)), min(t5, t6));
+    float tmax = min(min(max(t1, t2), max(t3, t4)), max(t5, t6));
+ 
+    if(tmax < 0 || tmin > tmax)
+        return false;
+ 
+    return true;
+}
