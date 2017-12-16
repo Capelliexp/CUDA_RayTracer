@@ -228,6 +228,8 @@ int main()
 
 		SAFE_RELEASE(device);
 		SAFE_RELEASE(deviceContext);
+
+		getchar();
 	}
 	else
 	{
