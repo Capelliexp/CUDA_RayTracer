@@ -41,9 +41,13 @@ struct camera {
 };
 
 struct triangle {
+	DirectX::XMVECTOR p0;
 	DirectX::XMVECTOR p1;
 	DirectX::XMVECTOR p2;
-	DirectX::XMVECTOR p3;
+	DirectX::XMVECTOR edge0;
+	DirectX::XMVECTOR edge1;
+	DirectX::XMVECTOR edge2;
+
 	DirectX::XMVECTOR norm;
 };
 
@@ -224,9 +228,12 @@ HRESULT CreateBuffers() {
 
 
 	//TRIANGLE
-	tri.p1 = {5,0,5,0};
+	tri.p0 = {5,-5,5,0};
+	tri.p1 = {-5,-5,5,0};
 	tri.p2 = {0,5,5,0};
-	tri.p3 = {0,0,5,0};
+	tri.edge0 = DirectX::XMVectorSubtract(tri.p0, tri.p1);
+	tri.edge1 = DirectX::XMVectorSubtract(tri.p0, tri.p2);
+	tri.edge2 = DirectX::XMVectorSubtract(tri.p1, tri.p2);
 	tri.norm = {0,0,-1,0};
 
 	D3D11_BUFFER_DESC TriDesc;
