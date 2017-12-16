@@ -9,6 +9,7 @@
 
 #include "ComputeHelp.h"
 #include "D3D11Timer.h"
+#include <DirectXMath.h>
 
 /*	DirectXTex library - for usage info, see http://directxtex.codeplex.com/
 	
@@ -51,6 +52,9 @@ ComputeShader*			g_ComputeShader			= NULL;
 
 D3D11Timer*				g_Timer					= NULL;
 
+ID3D11Buffer* camBuffer;	//filled
+ID3D11Buffer* triangleBuffer;
+
 int g_Width, g_Height;
 
 //--------------------------------------------------------------------------------------
@@ -72,6 +76,18 @@ char* FeatureLevelToString(D3D_FEATURE_LEVEL featureLevel)
 
 	return "Unknown";
 }
+
+struct camera {
+	DirectX::XMVECTOR Pos;	//16
+	DirectX::XMVECTOR Dir;	//16
+};
+
+struct triangle {
+	DirectX::XMVECTOR p1;
+	DirectX::XMVECTOR p2;
+	DirectX::XMVECTOR p3;
+	DirectX::XMVECTOR norm;
+};
 
 //--------------------------------------------------------------------------------------
 // Create Direct3D device and swap chain
@@ -177,10 +193,58 @@ HRESULT Update(float deltaTime)
 	return S_OK;
 }
 
+HRESULT CreateBuffers() {
+	//CAMERA
+	camera myCamera;
+	myCamera.Pos = { 0,0,0,0 };
+	myCamera.Dir = { 0,0,1,0 };
+
+	D3D11_BUFFER_DESC CamPosDesc;
+	memset(&CamPosDesc, 0, sizeof(CamPosDesc));
+	CamPosDesc.ByteWidth = sizeof(myCamera);
+	CamPosDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	CamPosDesc.Usage = D3D11_USAGE_DYNAMIC;
+	CamPosDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	CamPosDesc.MiscFlags = 0;
+
+	D3D11_SUBRESOURCE_DATA CamPos_data;
+	CamPos_data.pSysMem = &myCamera;
+	CamPos_data.SysMemPitch = 0;
+	CamPos_data.SysMemSlicePitch = 0;
+
+	g_Device->CreateBuffer(&CamPosDesc, &CamPos_data, &camBuffer);
+
+	//TRIANGLE
+	triangle tri;
+	tri.p1 = {5,0,5,0};
+	tri.p2 = {0,5,5,0};
+	tri.p3 = {0,0,5,0};
+	tri.norm = {0,0,-1,0};
+
+	D3D11_BUFFER_DESC TriDesc;
+	memset(&TriDesc, 0, sizeof(TriDesc));
+	TriDesc.ByteWidth = sizeof(tri);
+	TriDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	TriDesc.Usage = D3D11_USAGE_DYNAMIC;
+	TriDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	TriDesc.MiscFlags = 0;
+
+	D3D11_SUBRESOURCE_DATA Tri_data;
+	Tri_data.pSysMem = &tri;
+	Tri_data.SysMemPitch = 0;
+	Tri_data.SysMemSlicePitch = 0;
+
+	g_Device->CreateBuffer(&TriDesc, &Tri_data, &triangleBuffer);
+
+	return S_OK;
+}
+
 HRESULT Render(float deltaTime)
 {
 	ID3D11UnorderedAccessView* uav[] = { g_BackBufferUAV };
 	g_DeviceContext->CSSetUnorderedAccessViews(0, 1, uav, NULL);
+	g_DeviceContext->CSSetConstantBuffers(0, 1, &camBuffer);
+	g_DeviceContext->CSSetConstantBuffers(1, 1, &triangleBuffer);
 
 	g_ComputeShader->Set();
 	g_Timer->Start();
@@ -222,6 +286,9 @@ int WINAPI wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdL
 
 	__int64 prevTimeStamp = 0;
 	QueryPerformanceCounter((LARGE_INTEGER*)&prevTimeStamp);
+
+	//vårt stuff
+	CreateBuffers();
 
 	// Main message loop
 	MSG msg = {0};

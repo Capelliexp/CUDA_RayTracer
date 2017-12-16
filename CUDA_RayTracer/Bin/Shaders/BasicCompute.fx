@@ -1,9 +1,3 @@
-//--------------------------------------------------------------------------------------
-// BasicCompute.fx
-// Direct3D 11 Shader Model 5.0 Demo
-// Copyright (c) Stefan Petersson, 2012
-//--------------------------------------------------------------------------------------
-
 RWTexture2D<float4> output : register(u0);
 
 [numthreads(32, 32, 1)]
