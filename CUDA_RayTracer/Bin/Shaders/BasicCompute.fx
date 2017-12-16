@@ -15,6 +15,23 @@ cbuffer Tri : register(b1) {
 	float4 norm;
 };
 
+float3 ComputeCameraRay(float pixelX, float pixelY, float3 CamPos, float3 CamLook) {
+	const float width = 400.0;  //ändra dessa för annat perspektiv
+	const float height = 400.0;
+
+	float normalized_X = (pixelX / width) - 0.5;
+	float normalized_Y = (pixelY / height) - 0.5;
+
+	float3 camera_direction = normalize(CamLook - CamPos);
+
+	float3 camera_right = cross(camera_direction, float3(0, 1, 0));
+	float3 camera_up = cross(camera_right, camera_direction);
+
+	float3 image_point = normalized_X * camera_right + normalized_Y * camera_up + camera_direction;
+
+	return image_point;
+}
+
 int TriangleTest(float3 dir) {
 	///u and v, barycentric coordinates
 	///w = (1 - u - v)
@@ -28,7 +45,7 @@ int TriangleTest(float3 dir) {
 	float3 q = cross(dir, edge1.xyz);
 	float a = dot(q, edge0.xyz);
 
-	if (!((a > -epsilon) && (a < epsilon))) {	//miss?
+	if (!((a > -epsilon) && (a < epsilon))){	//miss?
 		float f = 1 / a;
 		float3 s = Pos - p0;
 		float u = f * dot(s, q);
@@ -63,12 +80,14 @@ int TriangleTest(float3 dir) {
 [numthreads(32, 32, 1)]
 void main( uint3 threadID : SV_DispatchThreadID ){
 	float4 color = { 1, 0, 0, 1 };
-	float3 newDir;
+	/*float3 newDir;
 	newDir.x = (threadID.x - 400) / 400;
 	newDir.y = (threadID.y - 400) / 400;
-	newDir.z = 1.f;
+	newDir.z = 1.f;*/
 
-	int triTest1 = TriangleTest(Dir);
+	float3 newDir = ComputeCameraRay(threadID.x, threadID.y, Pos.xyz, Dir.xyz);
+
+	int triTest1 = TriangleTest(newDir);
 
 	if (triTest1 == 1)	//hit
 		output[threadID.xy] = float4(0, 1, 0, 1);
