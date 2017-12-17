@@ -43,6 +43,7 @@ cbuffer Tri : register(b1) {	//används för små antal konstanter
 	float4 qcolor;
 };
 
+//https://msdn.microsoft.com/en-us/library/windows/desktop/ff476335(v=vs.85).aspx#Structured_Buffer
 StructuredBuffer<triStruct> StructBuffer;	//new - annvänds för större stuff
 
 float3 ComputeCameraRay(float pixelX, float pixelY, float3 CamPos, float3 CamLook) {
