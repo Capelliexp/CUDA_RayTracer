@@ -1,24 +1,24 @@
 RWTexture2D<float4> output : register(u0);
 
-//struct triStruct {
-//	float4 p0;
-//	float4 p1;
-//	float4 p2;
-//
-//	float4 edge0;
-//	float4 edge1;
-//	float4 edge2;
-//
-//	float4 norm;
-//	float4 color;
-//};
+struct triStruct {
+	float4 p0;
+	float4 p1;
+	float4 p2;
+
+	float4 edge0;
+	float4 edge1;
+	float4 edge2;
+
+	float4 norm;
+	float4 color;
+};
 
 cbuffer Cam : register(b0){
 	float4 Pos;
 	float4 Dir;
 };
 
-cbuffer Tri : register(b1) {
+cbuffer Tri : register(b1) {	//används för små antal konstanter
 	//triStruct data[2];
 	float4 p0;
 	float4 p1;
@@ -42,6 +42,8 @@ cbuffer Tri : register(b1) {
 	float4 qnorm;
 	float4 qcolor;
 };
+
+StructuredBuffer<triStruct> StructBuffer;	//new - annvänds för större stuff
 
 float3 ComputeCameraRay(float pixelX, float pixelY, float3 CamPos, float3 CamLook) {
 	float width = 800.0;  //ändra dessa för annat perspektiv
