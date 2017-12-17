@@ -1,10 +1,17 @@
 RWTexture2D<float4> output : register(u0);
 
-struct OBJFormat_GPU {
-	float x, y, z;
-	float u, v;
-	float xn, yn, zn;
-};
+//struct triStruct {
+//	float4 p0;
+//	float4 p1;
+//	float4 p2;
+//
+//	float4 edge0;
+//	float4 edge1;
+//	float4 edge2;
+//
+//	float4 norm;
+//	float4 color;
+//};
 
 cbuffer Cam : register(b0){
 	float4 Pos;
@@ -12,6 +19,7 @@ cbuffer Cam : register(b0){
 };
 
 cbuffer Tri : register(b1) {
+	//triStruct data[2];
 	float4 p0;
 	float4 p1;
 	float4 p2;
@@ -22,6 +30,17 @@ cbuffer Tri : register(b1) {
 
 	float4 norm;
 	float4 color;
+
+	float4 qp0;
+	float4 qp1;
+	float4 qp2;
+		   
+	float4 qedge0;
+	float4 qedge1;
+	float4 qedge2;
+		   
+	float4 qnorm;
+	float4 qcolor;
 };
 
 float3 ComputeCameraRay(float pixelX, float pixelY, float3 CamPos, float3 CamLook) {
@@ -85,19 +104,21 @@ int TriangleTest(float3 dir) {
 void main( uint3 threadID : SV_DispatchThreadID ){
 	float3 newDir = ComputeCameraRay(threadID.x, threadID.y, Pos.xyz, Dir.xyz);
 	
-	int triTest1 = TriangleTest(newDir);
-	if (triTest1 == 1)	//hit
-		output[threadID.xy] = color;
+	//int triTest1 = TriangleTest(newDir);
+	//if (triTest1 == 1)	//hit
+	//	output[threadID.xy] = color;
 	//else if (triTest1 == -1)	//miss
 	//	output[threadID.xy] = float4(1, 1, 0, 1);
 	//else if (triTest1 == -2)	//miss
 	//	output[threadID.xy] = float4(0, 1, 1, 1);
 	//else if (triTest1 == -3)	//miss
 	//	output[threadID.xy] = float4(1, 0, 1, 1);
-	else	//miss
-		output[threadID.xy] = float4(0, 0, 0, 1);
+	//else	//miss
+	//	output[threadID.xy] = float4(0, 0, 0, 1);
 
 	//output[threadID.xy] = (color + float4(0, triTest1, b, 0));
+
+	output[threadID.xy] = float4(1, 0, 0, 1);
 
 	//if (newDir.x > 1) {
 	//	output[threadID.xy] = float4(1, 0, 0, 1);

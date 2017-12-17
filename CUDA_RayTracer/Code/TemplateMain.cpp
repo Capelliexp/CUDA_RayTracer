@@ -13,6 +13,7 @@
 #include <DirectXTex.h>
 #include <iostream>
 #include <windows.h>
+#include <time.h>
 //#include <d3d11.h>
 //#include <d3dcompiler.h>
 
@@ -43,6 +44,12 @@ struct triangle {
 	DirectX::XMVECTOR color;
 };
 
+struct triangleArrayStruct {
+	triangle triArray[2];
+};
+
+void GenerateTriangle(triangle* tri);
+
 //--------------------------------------------------------------------------------------
 // Global Variables
 //--------------------------------------------------------------------------------------
@@ -61,11 +68,10 @@ ComputeShader*			g_ComputeShader			= NULL;
 D3D11Timer*				g_Timer					= NULL;
 
 camera myCamera;
-triangle tri;
+triangleArrayStruct triArray;
 
 ID3D11Buffer* camBuffer;	//filled
 ID3D11Buffer* triangleBuffer;
-ID3D11Buffer* sceneBuffer;
 
 int g_Width, g_Height;
 
@@ -219,18 +225,30 @@ HRESULT CreateBuffers() {
 		return blob;
 
 	//TRIANGLE
-	tri.p0 = {0.5,0.5,5,0};
-	tri.p1 = {-0.5,0,5,0};
-	tri.p2 = {0.5,0,5,0};
-	tri.edge0 = DirectX::XMVectorSubtract(tri.p0, tri.p1);
-	tri.edge1 = DirectX::XMVectorSubtract(tri.p0, tri.p2);
-	tri.edge2 = DirectX::XMVectorSubtract(tri.p1, tri.p2);
-	tri.norm = {0,0,-1,0};
-	tri.color = {1,0,1,1};
+	for(int i = 0; i < 2; i++)
+		GenerateTriangle(&triArray.triArray[i]);
+
+	/*triArray[0].p0 = { 0.5,0.5,5,0 };
+	triArray[0].p1 = { -0.5,0,5,0 };
+	triArray[0].p2 = { 0.5,0,5,0 };
+	triArray[0].edge0 = DirectX::XMVectorSubtract(triArray[0].p0, triArray[0].p1);
+	triArray[0].edge1 = DirectX::XMVectorSubtract(triArray[0].p0, triArray[0].p2);
+	triArray[0].edge2 = DirectX::XMVectorSubtract(triArray[0].p1, triArray[0].p2);
+	triArray[0].norm = { 0,0,-1,0 };
+	triArray[0].color = { 1,0,1,1 };*/
+
+	/*triArray.p0 = { 0.5,0.5,5,0 };
+	triArray.p1 = { -0.5,0,5,0 };
+	triArray.p2 = { 0.5,0,5,0 };
+	triArray.edge0 = DirectX::XMVectorSubtract(triArray.p0, triArray.p1);
+	triArray.edge1 = DirectX::XMVectorSubtract(triArray.p0, triArray.p2);
+	triArray.edge2 = DirectX::XMVectorSubtract(triArray.p1, triArray.p2);
+	triArray.norm = { 0,0,-1,0 };
+	triArray.color = { 1,0,1,1 };*/
 
 	D3D11_BUFFER_DESC TriDesc;
 	memset(&TriDesc, 0, sizeof(TriDesc));
-	TriDesc.ByteWidth = sizeof(triangle);
+	TriDesc.ByteWidth = sizeof(triangleArrayStruct);
 	TriDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
 	TriDesc.Usage = D3D11_USAGE_DYNAMIC;
 	TriDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
@@ -238,7 +256,7 @@ HRESULT CreateBuffers() {
 	TriDesc.StructureByteStride = 0;
 
 	D3D11_SUBRESOURCE_DATA Tri_data;
-	Tri_data.pSysMem = &tri;
+	Tri_data.pSysMem = &triArray;
 	Tri_data.SysMemPitch = 0;
 	Tri_data.SysMemSlicePitch = 0;
 
@@ -282,8 +300,9 @@ HRESULT Render(float deltaTime)
 // Entry point to the program. Initializes everything and goes into a message processing 
 // loop. Idle time is used to render the scene.
 //--------------------------------------------------------------------------------------
-int WINAPI wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow )
-{
+int WINAPI wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow ){
+	srand(time(NULL));
+
 	if( FAILED( InitWindow( hInstance, nCmdShow ) ) )
 		return 0;
 
@@ -412,19 +431,19 @@ LRESULT CALLBACK WndProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam 
 }
 
 void GenerateTriangle(triangle* tri) {
-	float x1 = (int)rand()%100 + 1;
-	float y1 = (int)rand()%100 + 1;
-	float z1 = (int)rand()%100 + 1 + 5;
+	float x1 = (int)rand()%10 + 1 + 3;
+	float y1 = (int)rand()%10 + 1 - 10;
+	float z1 = (int)rand()%10 + 1 + 20;
 	tri->p0 = {x1,y1,z1,1};
 
-	float x2 = x1 + (int)rand()%10 - 5;
-	float y2 = y1 + (int)rand()%10 - 5;
-	float z2 = z1 + (int)rand()%10 - 5;
+	float x2 = x1 + (int)rand()%5;
+	float y2 = y1 + (int)rand()%5;
+	float z2 = z1 + (int)rand()%5;
 	tri->p1 = {x2,y2,z2,1};
 
-	float x3 = x1 + (int)rand()%10 - 5;
-	float y3 = y1 + (int)rand()%10 - 5;
-	float z3 = z1 + (int)rand()%10 - 5;
+	float x3 = x1 + (int)rand()%5;
+	float y3 = y1 + (int)rand()%5;
+	float z3 = z1 + (int)rand()%5;
 	tri->p2 = {x3,y3,z3,1};
 	
 	tri->edge0 = DirectX::XMVectorSubtract(tri->p0, tri->p1);
@@ -432,6 +451,7 @@ void GenerateTriangle(triangle* tri) {
 	tri->edge2 = DirectX::XMVectorSubtract(tri->p1, tri->p2);
 
 	tri->norm = DirectX::XMVector2Cross(tri->edge0, tri->edge1);
+	//tri->norm = { 0,0,-1,0 };
 
 	float red   = (int)rand()%256;
 	float green = (int)rand()%256;
