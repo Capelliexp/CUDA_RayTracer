@@ -1,5 +1,11 @@
 RWTexture2D<float4> output : register(u0);
 
+struct OBJFormat_GPU {
+	float x, y, z;
+	float u, v;
+	float xn, yn, zn;
+};
+
 cbuffer Cam : register(b0){
 	float4 Pos;
 	float4 Dir;
@@ -9,15 +15,18 @@ cbuffer Tri : register(b1) {
 	float4 p0;
 	float4 p1;
 	float4 p2;
+
 	float4 edge0;
 	float4 edge1;
 	float4 edge2;
+
 	float4 norm;
+	float4 color;
 };
 
 float3 ComputeCameraRay(float pixelX, float pixelY, float3 CamPos, float3 CamLook) {
-	const float width = 400.0;  //ändra dessa för annat perspektiv
-	const float height = 400.0;
+	float width = 800.0;  //ändra dessa för annat perspektiv
+	float height = 800.0;
 
 	float normalized_X = (pixelX / width) - 0.5;
 	float normalized_Y = (pixelY / height) - 0.5;
@@ -33,11 +42,6 @@ float3 ComputeCameraRay(float pixelX, float pixelY, float3 CamPos, float3 CamLoo
 }
 
 int TriangleTest(float3 dir) {
-	///u and v, barycentric coordinates
-	///w = (1 - u - v)
-	///r(t) = f(u, v)
-	///o + td = (1 - u - v)p1 + up2 + vp3
-
 	int returnValue = 0;
 	float epsilon = 0.000001f;
 	float t = 0.0f;
@@ -79,27 +83,19 @@ int TriangleTest(float3 dir) {
 
 [numthreads(32, 32, 1)]
 void main( uint3 threadID : SV_DispatchThreadID ){
-	float4 color = { 1, 0, 0, 1 };
-	/*float3 newDir;
-	newDir.x = (threadID.x - 400) / 400;
-	newDir.y = (threadID.y - 400) / 400;
-	newDir.z = 1.f;*/
-
 	float3 newDir = ComputeCameraRay(threadID.x, threadID.y, Pos.xyz, Dir.xyz);
-
+	
 	int triTest1 = TriangleTest(newDir);
-
 	if (triTest1 == 1)	//hit
-		output[threadID.xy] = float4(0, 1, 0, 1);
-	else if (triTest1 == -1)	//miss
-		output[threadID.xy] = float4(1, 1, 0, 1);
-	else if (triTest1 == -2)	//miss
-		output[threadID.xy] = float4(0, 1, 1, 1);
-	else if (triTest1 == -3)	//miss
-		output[threadID.xy] = float4(1, 0, 1, 1);
-	else	//error
-		output[threadID.xy] = float4(1, 0, 0, 1);
-		
+		output[threadID.xy] = color;
+	//else if (triTest1 == -1)	//miss
+	//	output[threadID.xy] = float4(1, 1, 0, 1);
+	//else if (triTest1 == -2)	//miss
+	//	output[threadID.xy] = float4(0, 1, 1, 1);
+	//else if (triTest1 == -3)	//miss
+	//	output[threadID.xy] = float4(1, 0, 1, 1);
+	else	//miss
+		output[threadID.xy] = float4(0, 0, 0, 1);
 
 	//output[threadID.xy] = (color + float4(0, triTest1, b, 0));
 

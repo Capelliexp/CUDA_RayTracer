@@ -6,28 +6,18 @@
 // Copyright (c) Stefan Petersson 2013. All rights reserved.
 //--------------------------------------------------------------------------------------
 #include "stdafx.h"
-
 #include "ComputeHelp.h"
 #include "D3D11Timer.h"
 #include <DirectXMath.h>
-
-/*	DirectXTex library - for usage info, see http://directxtex.codeplex.com/
-	
-	Usage example (may not be the "correct" way, I just wrote it in a hurry):
-
-	DirectX::ScratchImage img;
-	DirectX::TexMetadata meta;
-	ID3D11ShaderResourceView* srv = nullptr;
-	if(SUCCEEDED(hr = DirectX::LoadFromDDSFile(_T("C:\\Program Files (x86)\\Microsoft DirectX SDK (June 2010)\\Samples\\Media\\Dwarf\\Armor.dds"), 0, &meta, img)))
-	{
-		//img loaded OK
-		if(SUCCEEDED(hr = DirectX::CreateShaderResourceView(g_Device, img.GetImages(), img.GetImageCount(), meta, &srv)))
-		{
-			//srv created OK
-		}
-	}
-*/
+//#include "../tinyobjloader/tiny_obj_loader.h"
 #include <DirectXTex.h>
+#include <iostream>
+#include <windows.h>
+//#include <d3d11.h>
+//#include <d3dcompiler.h>
+
+//#pragma comment (lib, "d3d11.lib")
+//#pragma comment (lib, "d3dcompiler.lib")
 
 #if defined( DEBUG ) || defined( _DEBUG )
 #pragma comment(lib, "DirectXTexD.lib")
@@ -44,11 +34,13 @@ struct triangle {
 	DirectX::XMVECTOR p0;
 	DirectX::XMVECTOR p1;
 	DirectX::XMVECTOR p2;
+
 	DirectX::XMVECTOR edge0;
 	DirectX::XMVECTOR edge1;
 	DirectX::XMVECTOR edge2;
 
 	DirectX::XMVECTOR norm;
+	DirectX::XMVECTOR color;
 };
 
 //--------------------------------------------------------------------------------------
@@ -73,6 +65,7 @@ triangle tri;
 
 ID3D11Buffer* camBuffer;	//filled
 ID3D11Buffer* triangleBuffer;
+ID3D11Buffer* sceneBuffer;
 
 int g_Width, g_Height;
 
@@ -216,7 +209,6 @@ HRESULT CreateBuffers() {
 	CamPosDesc.MiscFlags = 0;
 	CamPosDesc.StructureByteStride = 0;
 
-
 	D3D11_SUBRESOURCE_DATA CamPos_data;
 	CamPos_data.pSysMem = &myCamera;
 	CamPos_data.SysMemPitch = 0;
@@ -226,15 +218,15 @@ HRESULT CreateBuffers() {
 	if (FAILED(blob))
 		return blob;
 
-
 	//TRIANGLE
-	tri.p0 = {5,-5,5,0};
-	tri.p1 = {-5,-5,5,0};
-	tri.p2 = {0,5,5,0};
+	tri.p0 = {0.5,0.5,5,0};
+	tri.p1 = {-0.5,0,5,0};
+	tri.p2 = {0.5,0,5,0};
 	tri.edge0 = DirectX::XMVectorSubtract(tri.p0, tri.p1);
 	tri.edge1 = DirectX::XMVectorSubtract(tri.p0, tri.p2);
 	tri.edge2 = DirectX::XMVectorSubtract(tri.p1, tri.p2);
 	tri.norm = {0,0,-1,0};
+	tri.color = {1,0,1,1};
 
 	D3D11_BUFFER_DESC TriDesc;
 	memset(&TriDesc, 0, sizeof(TriDesc));
@@ -244,7 +236,6 @@ HRESULT CreateBuffers() {
 	TriDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 	TriDesc.MiscFlags = 0;
 	TriDesc.StructureByteStride = 0;
-
 
 	D3D11_SUBRESOURCE_DATA Tri_data;
 	Tri_data.pSysMem = &tri;
@@ -384,7 +375,6 @@ HRESULT InitWindow( HINSTANCE hInstance, int nCmdShow )
 	return S_OK;
 }
 
-
 //--------------------------------------------------------------------------------------
 // Called every time the application receives a message
 //--------------------------------------------------------------------------------------
@@ -419,4 +409,32 @@ LRESULT CALLBACK WndProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam 
 	}
 
 	return 0;
+}
+
+void GenerateTriangle(triangle* tri) {
+	float x1 = (int)rand()%100 + 1;
+	float y1 = (int)rand()%100 + 1;
+	float z1 = (int)rand()%100 + 1 + 5;
+	tri->p0 = {x1,y1,z1,1};
+
+	float x2 = x1 + (int)rand()%10 - 5;
+	float y2 = y1 + (int)rand()%10 - 5;
+	float z2 = z1 + (int)rand()%10 - 5;
+	tri->p1 = {x2,y2,z2,1};
+
+	float x3 = x1 + (int)rand()%10 - 5;
+	float y3 = y1 + (int)rand()%10 - 5;
+	float z3 = z1 + (int)rand()%10 - 5;
+	tri->p2 = {x3,y3,z3,1};
+	
+	tri->edge0 = DirectX::XMVectorSubtract(tri->p0, tri->p1);
+	tri->edge1 = DirectX::XMVectorSubtract(tri->p0, tri->p2);
+	tri->edge2 = DirectX::XMVectorSubtract(tri->p1, tri->p2);
+
+	tri->norm = DirectX::XMVector2Cross(tri->edge0, tri->edge1);
+
+	float red   = (int)rand()%256;
+	float green = (int)rand()%256;
+	float blue  = (int)rand()%256;
+	tri->color = {red/255,green/255,blue/255,1};
 }
