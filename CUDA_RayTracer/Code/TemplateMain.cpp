@@ -61,14 +61,10 @@ ComputeShader*			g_ComputeShader			= NULL;
 
 D3D11Timer*				g_Timer					= NULL;
 
-camera myCamera;
-//triangleArrayStruct triArray;
-
-ID3D11Buffer* camBuffer;	//filled
-//ID3D11Buffer* triangleBuffer;
-//ID3D11Buffer* triangleStructuredBuffer;
+ID3D11Buffer* camBuffer;
 ComputeBuffer* TriangleBuffer = NULL;
 
+camera myCamera;
 triangle triArray[2];
 
 int g_Width, g_Height;
@@ -227,7 +223,7 @@ HRESULT CreateBuffers() {
 	for(int i = 0; i < 2; i++)
 		GenerateTriangle(&triArray[i]);
 
-	TriangleBuffer = g_ComputeSys->CreateBuffer(STRUCTURED_BUFFER, sizeof(triangle), 2, true, true, "TriangleStruct");
+	TriangleBuffer = g_ComputeSys->CreateBuffer(STRUCTURED_BUFFER, sizeof(triangle), 2, true, false, triArray);
 
 	return S_OK;
 }
