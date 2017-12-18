@@ -20,9 +20,13 @@
 #pragma comment(lib, "DirectXTex.lib")
 #endif
 
-struct camera {
-	DirectX::XMVECTOR Pos;	//16
-	DirectX::XMVECTOR Dir;	//16
+struct globals {
+	DirectX::XMVECTOR CamPos;	//16
+	DirectX::XMVECTOR CamDir;	//16
+	int triAmount;				//4
+	int width;					//4
+	int height;					//4
+	int padding1;				//4
 };
 
 struct triangle {
@@ -55,11 +59,13 @@ ComputeShader*			g_ComputeShader			= NULL;
 
 D3D11Timer*				g_Timer					= NULL;
 
-ID3D11Buffer* camBuffer;
+ID3D11Buffer* globalBuffer;
 ComputeBuffer* TriangleBuffer = NULL;
 
-camera myCamera;
-triangle triArray[2];
+#define NUM_TRIANGLES 10
+
+globals myGlobals;
+triangle triArray[NUM_TRIANGLES];
 
 int g_Width, g_Height;
 
@@ -192,32 +198,35 @@ HRESULT CreateBuffers() {
 	HRESULT blob;
 
 	//CAMERA
-	myCamera.Pos = { 0,0,0,0 };
-	myCamera.Dir = { 0,0,1,0 };
+	myGlobals.CamPos = { 0,0,0,0 };
+	myGlobals.CamDir = { 0,0,1,0 };
+	myGlobals.triAmount = NUM_TRIANGLES;
+	myGlobals.width = 800;
+	myGlobals.height = 800;
 
-	D3D11_BUFFER_DESC CamPosDesc;
-	memset(&CamPosDesc, 0, sizeof(CamPosDesc));
-	CamPosDesc.ByteWidth = sizeof(camera);
-	CamPosDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	CamPosDesc.Usage = D3D11_USAGE_DYNAMIC;
-	CamPosDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	CamPosDesc.MiscFlags = 0;
-	CamPosDesc.StructureByteStride = 0;
+	D3D11_BUFFER_DESC GlobalsDesc;
+	memset(&GlobalsDesc, 0, sizeof(GlobalsDesc));
+	GlobalsDesc.ByteWidth = sizeof(globals);
+	GlobalsDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+	GlobalsDesc.Usage = D3D11_USAGE_DYNAMIC;
+	GlobalsDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+	GlobalsDesc.MiscFlags = 0;
+	GlobalsDesc.StructureByteStride = 0;
 
-	D3D11_SUBRESOURCE_DATA CamPos_data;
-	CamPos_data.pSysMem = &myCamera;
-	CamPos_data.SysMemPitch = 0;
-	CamPos_data.SysMemSlicePitch = 0;
+	D3D11_SUBRESOURCE_DATA GlobalsDesc_data;
+	GlobalsDesc_data.pSysMem = &myGlobals;
+	GlobalsDesc_data.SysMemPitch = 0;
+	GlobalsDesc_data.SysMemSlicePitch = 0;
 
-	blob = g_Device->CreateBuffer(&CamPosDesc, &CamPos_data, &camBuffer);
+	blob = g_Device->CreateBuffer(&GlobalsDesc, &GlobalsDesc_data, &globalBuffer);
 	if (FAILED(blob))
 		return blob;
 
 	//TRIANGLE
-	for(int i = 0; i < 2; i++)
+	for(int i = 0; i < NUM_TRIANGLES; i++)
 		GenerateTriangle(&triArray[i]);
 
-	TriangleBuffer = g_ComputeSys->CreateBuffer(STRUCTURED_BUFFER, sizeof(triangle), 2, true, false, triArray);
+	TriangleBuffer = g_ComputeSys->CreateBuffer(STRUCTURED_BUFFER, sizeof(triangle), NUM_TRIANGLES, true, false, triArray);
 
 	return S_OK;
 }
@@ -229,7 +238,7 @@ HRESULT Render(float deltaTime){
 	ID3D11ShaderResourceView* srv[] = { TriangleBuffer->GetResourceView() };
 	g_DeviceContext->CSSetShaderResources(0, 1, srv);
 
-	g_DeviceContext->CSSetConstantBuffers(0, 1, &camBuffer);
+	g_DeviceContext->CSSetConstantBuffers(0, 1, &globalBuffer);
 
 	g_ComputeShader->Set();
 	g_Timer->Start();

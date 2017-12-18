@@ -14,14 +14,18 @@ struct triStruct {
 };
 StructuredBuffer<triStruct> StructBuffer : register(t0); 
 
-cbuffer Cam : register(b0){
+cbuffer Globals : register(b0){
 	float4 Pos;
 	float4 Dir;
+	int triAmount;
+	int globalWidth;
+	int globalHeight;
+	int padding1;
 };
 
 float3 ComputeCameraRay(float pixelX, float pixelY, float3 CamPos, float3 CamLook) {
-	float width = 800.0;
-	float height = 800.0;
+	float width = globalWidth;
+	float height = globalHeight;
 
 	float normalized_X = (pixelX / width) - 0.5;
 	float normalized_Y = (pixelY / height) - 0.5;
@@ -81,7 +85,7 @@ int TriangleTest(float3 dir, int triIndex) {
 void main( uint3 threadID : SV_DispatchThreadID ){
 	float3 newDir = ComputeCameraRay(threadID.x, threadID.y, Pos.xyz, Dir.xyz);
 	
-	for (int i = 0; i < 2; i++) {
+	for (int i = 0; i < triAmount; i++) {
 		if(TriangleTest(newDir, i) == 1)
 			output[threadID.xy] = StructBuffer[i].color;
 	}
