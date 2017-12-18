@@ -12,39 +12,12 @@ struct triStruct {
 	float4 norm;
 	float4 color;
 };
+StructuredBuffer<triStruct> StructBuffer : register(t0); 
 
 cbuffer Cam : register(b0){
 	float4 Pos;
 	float4 Dir;
 };
-
-cbuffer Tri : register(b1) {	//används för små antal konstanter
-	//triStruct data[2];
-	float4 p0;
-	float4 p1;
-	float4 p2;
-
-	float4 edge0;
-	float4 edge1;
-	float4 edge2;
-
-	float4 norm;
-	float4 color;
-
-	float4 qp0;
-	float4 qp1;
-	float4 qp2;
-		   
-	float4 qedge0;
-	float4 qedge1;
-	float4 qedge2;
-		   
-	float4 qnorm;
-	float4 qcolor;
-};
-
-//https://msdn.microsoft.com/en-us/library/windows/desktop/ff476335(v=vs.85).aspx#Structured_Buffer
-StructuredBuffer<triStruct> StructBuffer;	//new - annvänds för större stuff
 
 float3 ComputeCameraRay(float pixelX, float pixelY, float3 CamPos, float3 CamLook) {
 	float width = 800.0;  //ändra dessa för annat perspektiv
@@ -107,28 +80,5 @@ int TriangleTest(float3 dir) {
 void main( uint3 threadID : SV_DispatchThreadID ){
 	float3 newDir = ComputeCameraRay(threadID.x, threadID.y, Pos.xyz, Dir.xyz);
 	
-	//int triTest1 = TriangleTest(newDir);
-	//if (triTest1 == 1)	//hit
-	//	output[threadID.xy] = color;
-	//else if (triTest1 == -1)	//miss
-	//	output[threadID.xy] = float4(1, 1, 0, 1);
-	//else if (triTest1 == -2)	//miss
-	//	output[threadID.xy] = float4(0, 1, 1, 1);
-	//else if (triTest1 == -3)	//miss
-	//	output[threadID.xy] = float4(1, 0, 1, 1);
-	//else	//miss
-	//	output[threadID.xy] = float4(0, 0, 0, 1);
-
-	//output[threadID.xy] = (color + float4(0, triTest1, b, 0));
-
-	output[threadID.xy] = float4(1, 0, 0, 1);
-
-	//if (newDir.x > 1) {
-	//	output[threadID.xy] = float4(1, 0, 0, 1);
-	//}
-	//else if (newDir.x < 1) {
-	//	output[threadID.xy] = float4(0, 1, 0, 1);
-	//}
-	//else
-	//	output[threadID.xy] = float4(float3(1,0,1) * (1 - length(threadID.xy - float2(400, 400)) / 400.0f), 1);
+	output[threadID.xy] = (StructBuffer[0].color != float4(0,0,0,0) ? float4(1,0,1,1) : float4(1,0,0,1));
 }

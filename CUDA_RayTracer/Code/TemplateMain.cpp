@@ -44,12 +44,6 @@ struct triangle {
 	DirectX::XMVECTOR color;
 };
 
-struct triangleArrayStruct {
-	triangle triArray[2];
-};
-
-void GenerateTriangle(triangle* tri);
-
 //--------------------------------------------------------------------------------------
 // Global Variables
 //--------------------------------------------------------------------------------------
@@ -68,11 +62,14 @@ ComputeShader*			g_ComputeShader			= NULL;
 D3D11Timer*				g_Timer					= NULL;
 
 camera myCamera;
-triangleArrayStruct triArray;
+//triangleArrayStruct triArray;
 
 ID3D11Buffer* camBuffer;	//filled
-ID3D11Buffer* triangleBuffer;
-ID3D11Buffer* triangleStructuredBuffer;
+//ID3D11Buffer* triangleBuffer;
+//ID3D11Buffer* triangleStructuredBuffer;
+ComputeBuffer* TriangleBuffer = NULL;
+
+triangle triArray[2];
 
 int g_Width, g_Height;
 
@@ -83,6 +80,7 @@ HRESULT             InitWindow( HINSTANCE hInstance, int nCmdShow );
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 HRESULT				Render(float deltaTime);
 HRESULT				Update(float deltaTime);
+void GenerateTriangle(triangle* tri);
 
 char* FeatureLevelToString(D3D_FEATURE_LEVEL featureLevel)
 {
@@ -227,61 +225,9 @@ HRESULT CreateBuffers() {
 
 	//TRIANGLE
 	for(int i = 0; i < 2; i++)
-		GenerateTriangle(&triArray.triArray[i]);
+		GenerateTriangle(&triArray[i]);
 
-	/*triArray[0].p0 = { 0.5,0.5,5,0 };
-	triArray[0].p1 = { -0.5,0,5,0 };
-	triArray[0].p2 = { 0.5,0,5,0 };
-	triArray[0].edge0 = DirectX::XMVectorSubtract(triArray[0].p0, triArray[0].p1);
-	triArray[0].edge1 = DirectX::XMVectorSubtract(triArray[0].p0, triArray[0].p2);
-	triArray[0].edge2 = DirectX::XMVectorSubtract(triArray[0].p1, triArray[0].p2);
-	triArray[0].norm = { 0,0,-1,0 };
-	triArray[0].color = { 1,0,1,1 };*/
-
-	/*triArray.p0 = { 0.5,0.5,5,0 };
-	triArray.p1 = { -0.5,0,5,0 };
-	triArray.p2 = { 0.5,0,5,0 };
-	triArray.edge0 = DirectX::XMVectorSubtract(triArray.p0, triArray.p1);
-	triArray.edge1 = DirectX::XMVectorSubtract(triArray.p0, triArray.p2);
-	triArray.edge2 = DirectX::XMVectorSubtract(triArray.p1, triArray.p2);
-	triArray.norm = { 0,0,-1,0 };
-	triArray.color = { 1,0,1,1 };*/
-
-	D3D11_BUFFER_DESC TriDesc;
-	memset(&TriDesc, 0, sizeof(TriDesc));
-	TriDesc.ByteWidth = sizeof(triangleArrayStruct);
-	TriDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	TriDesc.Usage = D3D11_USAGE_DYNAMIC;
-	TriDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	TriDesc.MiscFlags = 0;
-	TriDesc.StructureByteStride = 0;
-
-	D3D11_SUBRESOURCE_DATA Tri_data;
-	Tri_data.pSysMem = &triArray;
-	Tri_data.SysMemPitch = 0;
-	Tri_data.SysMemSlicePitch = 0;
-
-	blob = g_Device->CreateBuffer(&TriDesc, &Tri_data, &triangleBuffer);
-	if (FAILED(blob))
-		return blob;
-
-	//------------	ALL THIS SHIT IS NEW - but probs wont work
-
-	D3D11_BUFFER_DESC TriStructuredDesc;
-	memset(&TriStructuredDesc, 0, sizeof(TriStructuredDesc));
-	TriStructuredDesc.ByteWidth = sizeof(triangle)*2;
-	TriStructuredDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-	TriStructuredDesc.Usage = D3D11_USAGE_DYNAMIC;
-	TriStructuredDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-	TriStructuredDesc.MiscFlags = 0;
-	TriStructuredDesc.StructureByteStride = sizeof(triangle);
-
-	D3D11_SUBRESOURCE_DATA TriStructured_data;
-	TriStructured_data.pSysMem = &triArray;
-	TriStructured_data.SysMemPitch = 0;
-	TriStructured_data.SysMemSlicePitch = 0;
-
-	blob = g_Device->CreateBuffer(&TriStructuredDesc, &TriStructured_data, &triangleStructuredBuffer);
+	TriangleBuffer = g_ComputeSys->CreateBuffer(STRUCTURED_BUFFER, sizeof(triangle), 2, true, true, "TriangleStruct");
 
 	return S_OK;
 }
@@ -290,9 +236,11 @@ HRESULT Render(float deltaTime)
 {
 	ID3D11UnorderedAccessView* uav[] = { g_BackBufferUAV };
 	g_DeviceContext->CSSetUnorderedAccessViews(0, 1, uav, NULL);
+
+	ID3D11ShaderResourceView* srv[] = { TriangleBuffer->GetResourceView() };
+	g_DeviceContext->CSSetShaderResources(0, 1, srv);
+
 	g_DeviceContext->CSSetConstantBuffers(0, 1, &camBuffer);
-	g_DeviceContext->CSSetConstantBuffers(1, 1, &triangleBuffer);
-	g_DeviceContext->CSSetConstantBuffers(2, 1, &triangleStructuredBuffer);	//new
 
 	g_ComputeShader->Set();
 	g_Timer->Start();
