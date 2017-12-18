@@ -26,7 +26,7 @@ struct globals {
 	int triAmount;				//4
 	int width;					//4
 	int height;					//4
-	int padding1;				//4
+	int bounces;				//4
 };
 
 struct triangle {
@@ -63,6 +63,9 @@ ID3D11Buffer* globalBuffer;
 ComputeBuffer* TriangleBuffer = NULL;
 
 #define NUM_TRIANGLES 10
+#define WIDTH 800
+#define HEIGHT 800
+#define NUM_BOUNCES 2
 
 globals myGlobals;
 triangle triArray[NUM_TRIANGLES];
@@ -201,8 +204,9 @@ HRESULT CreateBuffers() {
 	myGlobals.CamPos = { 0,0,0,0 };
 	myGlobals.CamDir = { 0,0,1,0 };
 	myGlobals.triAmount = NUM_TRIANGLES;
-	myGlobals.width = 800;
-	myGlobals.height = 800;
+	myGlobals.width = WIDTH;
+	myGlobals.height = HEIGHT;
+	myGlobals.bounces = NUM_BOUNCES;
 
 	D3D11_BUFFER_DESC GlobalsDesc;
 	memset(&GlobalsDesc, 0, sizeof(GlobalsDesc));
@@ -395,26 +399,28 @@ LRESULT CALLBACK WndProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam 
 }
 
 void GenerateTriangle(triangle* tri) {
-	float x1 = (int)rand()%10 + 1 + 3;
-	float y1 = (int)rand()%10 + 1 - 10;
+	int clusterSize = 6;
+
+	float x1 = (int)rand()%10 + 1 - 2;
+	float y1 = (int)rand()%10 + 1 - 2;
 	float z1 = (int)rand()%10 + 1 + 20;
 	tri->p0 = {x1,y1,z1,1};
 
-	float x2 = x1 + (int)rand()%5;
-	float y2 = y1 + (int)rand()%5;
-	float z2 = z1 + (int)rand()%5;
+	float x2 = x1 + (int)rand()%clusterSize;
+	float y2 = y1 + (int)rand()%clusterSize;
+	float z2 = z1 + (int)rand()%clusterSize;
 	tri->p1 = {x2,y2,z2,1};
 
-	float x3 = x1 + (int)rand()%5;
-	float y3 = y1 + (int)rand()%5;
-	float z3 = z1 + (int)rand()%5;
+	float x3 = x1 + (int)rand()%clusterSize;
+	float y3 = y1 + (int)rand()%clusterSize;
+	float z3 = z1 + (int)rand()%clusterSize;
 	tri->p2 = {x3,y3,z3,1};
 	
 	tri->edge0 = DirectX::XMVectorSubtract(tri->p0, tri->p1);
 	tri->edge1 = DirectX::XMVectorSubtract(tri->p0, tri->p2);
 	tri->edge2 = DirectX::XMVectorSubtract(tri->p1, tri->p2);
 
-	tri->norm = DirectX::XMVector2Cross(tri->edge0, tri->edge1);
+	tri->norm = DirectX::XMVector3Normalize(DirectX::XMVector2Cross(tri->edge0, tri->edge1));
 	//tri->norm = { 0,0,-1,0 };
 
 	float red   = (int)rand()%256;
