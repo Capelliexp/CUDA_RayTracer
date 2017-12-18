@@ -9,16 +9,10 @@
 #include "ComputeHelp.h"
 #include "D3D11Timer.h"
 #include <DirectXMath.h>
-//#include "../tinyobjloader/tiny_obj_loader.h"
 #include <DirectXTex.h>
 #include <iostream>
 #include <windows.h>
 #include <time.h>
-//#include <d3d11.h>
-//#include <d3dcompiler.h>
-
-//#pragma comment (lib, "d3d11.lib")
-//#pragma comment (lib, "d3dcompiler.lib")
 
 #if defined( DEBUG ) || defined( _DEBUG )
 #pragma comment(lib, "DirectXTexD.lib")
@@ -76,7 +70,7 @@ HRESULT             InitWindow( HINSTANCE hInstance, int nCmdShow );
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 HRESULT				Render(float deltaTime);
 HRESULT				Update(float deltaTime);
-void GenerateTriangle(triangle* tri);
+void				GenerateTriangle(triangle* tri);
 
 char* FeatureLevelToString(D3D_FEATURE_LEVEL featureLevel)
 {
@@ -228,8 +222,7 @@ HRESULT CreateBuffers() {
 	return S_OK;
 }
 
-HRESULT Render(float deltaTime)
-{
+HRESULT Render(float deltaTime){
 	ID3D11UnorderedAccessView* uav[] = { g_BackBufferUAV };
 	g_DeviceContext->CSSetUnorderedAccessViews(0, 1, uav, NULL);
 
@@ -246,7 +239,6 @@ HRESULT Render(float deltaTime)
 
 	if(FAILED(g_SwapChain->Present( 0, 0 )))
 		return E_FAIL;
-
 
 	char title[256];
 	sprintf_s(
@@ -308,7 +300,6 @@ int WINAPI wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdL
 
 	return (int) msg.wParam;
 }
-
 
 //--------------------------------------------------------------------------------------
 // Register class and create window

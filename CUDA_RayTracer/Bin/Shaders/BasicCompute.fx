@@ -20,7 +20,7 @@ cbuffer Cam : register(b0){
 };
 
 float3 ComputeCameraRay(float pixelX, float pixelY, float3 CamPos, float3 CamLook) {
-	float width = 800.0;  //ändra dessa för annat perspektiv
+	float width = 800.0;
 	float height = 800.0;
 
 	float normalized_X = (pixelX / width) - 0.5;
@@ -36,25 +36,26 @@ float3 ComputeCameraRay(float pixelX, float pixelY, float3 CamPos, float3 CamLoo
 	return image_point;
 }
 
-int TriangleTest(float3 dir) {
+
+int TriangleTest(float3 dir, int triIndex) {
 	int returnValue = 0;
 	float epsilon = 0.000001f;
 	float t = 0.0f;
 
-	float3 q = cross(dir, edge1.xyz);
-	float a = dot(q, edge0.xyz);
+	float3 q = cross(dir, StructBuffer[triIndex].edge1.xyz);
+	float a = dot(q, StructBuffer[triIndex].edge0.xyz);
 
 	if (!((a > -epsilon) && (a < epsilon))){	//miss?
 		float f = 1 / a;
-		float3 s = Pos - p0;
+		float3 s = Pos - StructBuffer[triIndex].p0;
 		float u = f * dot(s, q);
 
 		if (!(u < 0.0f)) {	//miss?
-			float3 r = cross(s, edge0.xyz);
+			float3 r = cross(s, StructBuffer[triIndex].edge0.xyz);
 			float v = f * dot(dir, r);
 
 			if (!(v < 0.0f || u + v > 1.0f)) {	//miss?
-				t = f * dot(edge1.xyz, r);
+				t = f * dot(StructBuffer[triIndex].edge1.xyz, r);
 
 				if (t > 0) {	//HIT
 					//hit.t = t;
@@ -80,5 +81,10 @@ int TriangleTest(float3 dir) {
 void main( uint3 threadID : SV_DispatchThreadID ){
 	float3 newDir = ComputeCameraRay(threadID.x, threadID.y, Pos.xyz, Dir.xyz);
 	
-	output[threadID.xy] = (StructBuffer[0].color != float4(0,0,0,0) ? float4(1,0,1,1) : float4(1,0,0,1));
+	for (int i = 0; i < 2; i++) {
+		if(TriangleTest(newDir, i) == 1)
+			output[threadID.xy] = StructBuffer[i].color;
+	}
+
+	
 }
