@@ -42,6 +42,13 @@ struct triangle {
 	DirectX::XMVECTOR color;
 };
 
+struct light {
+	DirectX::XMVECTOR pos;
+	DirectX::XMVECTOR color;
+	float strength;
+	float padding1, padding2, padding3;
+};
+
 //--------------------------------------------------------------------------------------
 // Global Variables
 //--------------------------------------------------------------------------------------
@@ -61,14 +68,17 @@ D3D11Timer*				g_Timer					= NULL;
 
 ID3D11Buffer* globalBuffer;
 ComputeBuffer* TriangleBuffer = NULL;
+ComputeBuffer* LightBuffer = NULL;
 
 #define NUM_TRIANGLES 10
+#define NUM_LIGHTS 2
 #define WIDTH 800
 #define HEIGHT 800
 #define NUM_BOUNCES 2
 
 globals myGlobals;
 triangle triArray[NUM_TRIANGLES];
+light lightArray[NUM_LIGHTS];
 
 int g_Width, g_Height;
 
@@ -80,6 +90,7 @@ LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 HRESULT				Render(float deltaTime);
 HRESULT				Update(float deltaTime);
 void				GenerateTriangle(triangle* tri);
+void				GenerateLight(light* light);
 
 char* FeatureLevelToString(D3D_FEATURE_LEVEL featureLevel)
 {
@@ -227,10 +238,16 @@ HRESULT CreateBuffers() {
 		return blob;
 
 	//TRIANGLE
-	for(int i = 0; i < NUM_TRIANGLES; i++)
+	for (int i = 0; i < NUM_TRIANGLES; i++)
 		GenerateTriangle(&triArray[i]);
 
 	TriangleBuffer = g_ComputeSys->CreateBuffer(STRUCTURED_BUFFER, sizeof(triangle), NUM_TRIANGLES, true, false, triArray);
+
+	//LIGHT
+	for (int i = 0; i < NUM_TRIANGLES; i++)
+		GenerateLight(&lightArray[i]);
+
+	LightBuffer = g_ComputeSys->CreateBuffer(STRUCTURED_BUFFER, sizeof(light), NUM_LIGHTS, true, false, lightArray);
 
 	return S_OK;
 }
@@ -239,8 +256,8 @@ HRESULT Render(float deltaTime){
 	ID3D11UnorderedAccessView* uav[] = { g_BackBufferUAV };
 	g_DeviceContext->CSSetUnorderedAccessViews(0, 1, uav, NULL);
 
-	ID3D11ShaderResourceView* srv[] = { TriangleBuffer->GetResourceView() };
-	g_DeviceContext->CSSetShaderResources(0, 1, srv);
+	ID3D11ShaderResourceView* srv[] = { TriangleBuffer->GetResourceView(), LightBuffer->GetResourceView() };
+	g_DeviceContext->CSSetShaderResources(0, 2, srv);
 
 	g_DeviceContext->CSSetConstantBuffers(0, 1, &globalBuffer);
 
@@ -427,4 +444,19 @@ void GenerateTriangle(triangle* tri) {
 	float green = (int)rand()%256;
 	float blue  = (int)rand()%256;
 	tri->color = {red/255,green/255,blue/255,1};
+}
+
+void GenerateLight(light* light) {
+	float x = ((int)rand() % 10 + 1 - 2)*5;
+	float y = ((int)rand() % 10 + 1 - 2)*5;
+	float z = ((int)rand() % 10 + 1 + 20)*10;
+	light->pos = { x,y,z,1 };
+
+	/*float red = (int)rand() % 256;
+	float green = (int)rand() % 256;
+	float blue = (int)rand() % 256;
+	light->color = { red / 255,green / 255,blue / 255,1 };*/
+	light->color = { 1,1,1,1 };
+
+	light->strength = 100;
 }

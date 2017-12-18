@@ -12,7 +12,15 @@ struct triStruct {
 	float4 norm;
 	float4 color;
 };
-StructuredBuffer<triStruct> StructBuffer : register(t0); 
+StructuredBuffer<triStruct> StructBufferTriangle : register(t0);
+
+struct lightStruct {
+	float4 pos;
+	float4 color;
+	float strength;
+	float padding1, padding2, padding3;
+};
+StructuredBuffer<lightStruct> StructBufferLight : register(t1);
 
 cbuffer Globals : register(b0){
 	float4 camPos;
@@ -44,7 +52,6 @@ struct hit {
 	float range;
 	float3 hitOrigin;
 };
-
 hit TriangleTest(float3 origin, float3 direction, int triIndex, float hitRange) {
 	hit returnValue;
 	returnValue.range = 0.f;
@@ -52,20 +59,20 @@ hit TriangleTest(float3 origin, float3 direction, int triIndex, float hitRange) 
 	float epsilon = 0.000001f;
 	float t = 0.0f;
 
-	float3 q = cross(direction, StructBuffer[triIndex].edge1.xyz);
-	float a = dot(q, StructBuffer[triIndex].edge0.xyz);
+	float3 q = cross(direction, StructBufferTriangle[triIndex].edge1.xyz);
+	float a = dot(q, StructBufferTriangle[triIndex].edge0.xyz);
 
 	if (!((a > -epsilon) && (a < epsilon))){	//miss?
 		float f = 1 / a;
-		float3 s = origin - StructBuffer[triIndex].p0;
+		float3 s = origin - StructBufferTriangle[triIndex].p0;
 		float u = f * dot(s, q);
 
 		if (!(u < 0.0f)) {	//miss?
-			float3 r = cross(s, StructBuffer[triIndex].edge0.xyz);
+			float3 r = cross(s, StructBufferTriangle[triIndex].edge0.xyz);
 			float v = f * dot(direction, r);
 
 			if (!(v < 0.0f || u + v > 1.0f)) {	//miss?
-				t = f * dot(StructBuffer[triIndex].edge1.xyz, r);
+				t = f * dot(StructBufferTriangle[triIndex].edge1.xyz, r);
 
 				if (t > 0 && t < hitRange) {	//HIT
 					returnValue.range = t;
@@ -78,8 +85,34 @@ hit TriangleTest(float3 origin, float3 direction, int triIndex, float hitRange) 
 }
 
 float3 CalcReflection(float3 D, float3 N) {
+	return float3(D - (2 * (dot(D, N)*N)));
+}
 
-	return float3(0, 0, 0);
+float4 RecursiveBounceCalc(float3 origin, float3 direction, int bounceCount) {
+	if (!(bounceCount > 0)) {
+		return float4(0, 0, 0, 0);
+	}
+	//------
+
+	float hitRange = 99999999;
+	int closestTriIndex = -1;
+	float3 closestTriHitOrigin = origin;
+
+	for (int i = 0; i < triAmount; ++i) {
+		hit temp = TriangleTest(origin, direction, i, hitRange);
+		if (temp.range != 0) {
+			hitRange = temp.range;
+			closestTriHitOrigin = temp.hitOrigin;
+			closestTriIndex = i;
+		}
+	}
+
+	if (closestTriIndex != 0) {
+		return (StructBufferTriangle[closestTriIndex].color + RecursiveBounceCalc(closestTriHitOrigin, CalcReflection(direction, StructBufferTriangle[closestTriIndex].norm), bounceCount-1)*0.5);
+	}
+	else {
+		return float4(0, 0, 0, 0);
+	}
 }
 
 [numthreads(32, 32, 1)]
@@ -87,18 +120,21 @@ void main( uint3 threadID : SV_DispatchThreadID ){
 	float3 newDir = ComputeCameraRay(threadID.x, threadID.y, camPos.xyz, camDir.xyz);
 	float hitRange = 99999999;
 	int closestTriIndex = -1;
+	float3 closestTriHitOrigin = camPos.xyz;
 
 	for (int i = 0; i < triAmount; ++i) {
 		hit temp = TriangleTest(camPos, newDir, i, hitRange);
 		if (temp.range != 0) {
 			hitRange = temp.range;
+			closestTriHitOrigin = temp.hitOrigin;
 			closestTriIndex = i;
 		}
 	}
 
-	//for (int i = 0; i < globalBounces; ++i) {	//bounce light around
-
-	//}
-
-	output[threadID.xy] = StructBuffer[closestTriIndex].color;
+	if (closestTriIndex != -1) {
+		float4 finalColor = StructBufferTriangle[closestTriIndex].color * 0.8;
+		float4 bounceColor = RecursiveBounceCalc(closestTriHitOrigin, CalcReflection(camDir, StructBufferTriangle[closestTriIndex].norm), globalBounces);
+		finalColor += bounceColor*0.5;
+		output[threadID.xy] = finalColor;
+	}	
 }
