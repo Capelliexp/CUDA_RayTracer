@@ -108,7 +108,7 @@ bounce BounceCalc(float3 origin, float3 direction) {
 	}
 
 	bounce retValue;
-	if (closestTriIndex != 0) {
+	if (closestTriIndex != -1) {
 		retValue.bounceOrig = origin + (direction*hitRange);
 		retValue.bounceDir = CalcReflection(direction, StructBufferTriangle[closestTriIndex].norm);
 		retValue.color = StructBufferTriangle[closestTriIndex].color;
