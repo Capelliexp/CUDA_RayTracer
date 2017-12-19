@@ -76,11 +76,13 @@ ComputeBuffer* LightBuffer = NULL;
 #define NUM_LIGHTS 1
 #define WIDTH 800
 #define HEIGHT 800
-#define NUM_BOUNCES 1
+#define NUM_BOUNCES 2
 
 globals myGlobals;
 triangle triArray[NUM_TRIANGLES];
 light lightArray[NUM_LIGHTS];
+float realCamera[3];
+
 
 int g_Width, g_Height;
 
@@ -205,8 +207,16 @@ HRESULT Init()
 	return S_OK;
 }
 
-HRESULT Update(float deltaTime)
-{
+HRESULT Update(float deltaTime){
+	realCamera[0] += DirectX::XMScalarSin(deltaTime/1000) * 100;
+	myGlobals.CamPos = { realCamera[0], realCamera[1], realCamera[2], 0 };
+
+	D3D11_MAPPED_SUBRESOURCE mappedResource1;
+	ZeroMemory(&mappedResource1, sizeof(D3D11_MAPPED_SUBRESOURCE));
+	g_DeviceContext->Map(globalBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource1);
+	memcpy(mappedResource1.pData, &myGlobals, sizeof(myGlobals));
+	g_DeviceContext->Unmap(globalBuffer, 0);
+
 	return S_OK;
 }
 
@@ -214,7 +224,10 @@ HRESULT CreateBuffers() {
 	HRESULT blob;
 
 	//CAMERA
-	myGlobals.CamPos = { 0,0,0,0 };
+	realCamera[0] = 0;
+	realCamera[1] = 0;
+	realCamera[2] = 0;
+	myGlobals.CamPos = { realCamera[0],realCamera[1],realCamera[2], 0 };
 	myGlobals.CamDir = { 0,0,1,0 };
 	myGlobals.triAmount = NUM_TRIANGLES;
 	myGlobals.width = WIDTH;

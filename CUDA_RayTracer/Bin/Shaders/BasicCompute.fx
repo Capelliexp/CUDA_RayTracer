@@ -150,14 +150,14 @@ bounce BounceCalc(float3 origin, float3 direction) {
 [numthreads(32, 32, 1)]
 void main( uint3 threadID : SV_DispatchThreadID ){
 	float3 newDir = ComputeCameraRay(threadID.x, threadID.y, camPos.xyz, camDir.xyz);
-	float4 finalColor = float4(0,0,0,0);
+	float4 finalColor = float4(0,0,0,1);
 
 	float3 loopOrigin = camPos;
 	float3 loopDir = newDir;
 	for (int i = 0; i < globalBounces; ++i) {
 		bounce thisBounce = BounceCalc(loopOrigin, loopDir);
 		if (thisBounce.calculatedPower != -1) {
-			finalColor += StructBufferTriangle[thisBounce.triIndex].triColor * thisBounce.calculatedPower;
+			finalColor += (StructBufferTriangle[thisBounce.triIndex].triColor * thisBounce.calculatedPower)*(0.8-(0.1*i));
 		}
 		loopOrigin = thisBounce.bounceOrig;
 		loopDir = thisBounce.bounceDir;
