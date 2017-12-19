@@ -70,7 +70,7 @@ ID3D11Buffer* globalBuffer;
 ComputeBuffer* TriangleBuffer = NULL;
 ComputeBuffer* LightBuffer = NULL;
 
-#define NUM_TRIANGLES 10
+#define NUM_TRIANGLES 3
 #define NUM_LIGHTS 2
 #define WIDTH 800
 #define HEIGHT 800
@@ -89,7 +89,7 @@ HRESULT             InitWindow( HINSTANCE hInstance, int nCmdShow );
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 HRESULT				Render(float deltaTime);
 HRESULT				Update(float deltaTime);
-void				GenerateTriangle(triangle* tri);
+void				GenerateTriangle(triangle* tri, DirectX::XMVECTOR forceColor = {0,0,0,0}, bool force = false);
 void				GenerateLight(light* light);
 
 char* FeatureLevelToString(D3D_FEATURE_LEVEL featureLevel)
@@ -237,9 +237,14 @@ HRESULT CreateBuffers() {
 	if (FAILED(blob))
 		return blob;
 
+	DirectX::XMVECTOR a[3];
+	a[0] = { 0.5,0,0,1 };
+	a[1] = { 0,0.5,0,1 };
+	a[2] = { 0,0,0.5,1 };
+
 	//TRIANGLE
 	for (int i = 0; i < NUM_TRIANGLES; i++)
-		GenerateTriangle(&triArray[i]);
+		GenerateTriangle(&triArray[i], a[i], true);
 
 	TriangleBuffer = g_ComputeSys->CreateBuffer(STRUCTURED_BUFFER, sizeof(triangle), NUM_TRIANGLES, true, false, triArray);
 
@@ -415,7 +420,7 @@ LRESULT CALLBACK WndProc( HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam 
 	return 0;
 }
 
-void GenerateTriangle(triangle* tri) {
+void GenerateTriangle(triangle* tri, DirectX::XMVECTOR forceColor, bool force) {
 	int clusterSize = 6;
 
 	float x1 = (int)rand()%10 + 1 - 2;
@@ -438,12 +443,17 @@ void GenerateTriangle(triangle* tri) {
 	tri->edge2 = DirectX::XMVectorSubtract(tri->p1, tri->p2);
 
 	tri->norm = DirectX::XMVector3Normalize(DirectX::XMVector2Cross(tri->edge0, tri->edge1));
-	//tri->norm = { 0,0,-1,0 };
 
-	float red   = (int)rand()%256;
-	float green = (int)rand()%256;
-	float blue  = (int)rand()%256;
-	tri->color = {red/255,green/255,blue/255,1};
+	if (force == true) {
+		tri->color = forceColor;
+	}
+	else {
+		float red = (int)rand() % 256;
+		float green = (int)rand() % 256;
+		float blue = (int)rand() % 256;
+		tri->color = { red / 255,green / 255,blue / 255,1 };
+	}
+	
 }
 
 void GenerateLight(light* light) {

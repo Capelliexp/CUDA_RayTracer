@@ -54,7 +54,7 @@ struct hit {
 };
 hit TriangleTest(float3 origin, float3 direction, int triIndex, float hitRange) {
 	hit returnValue;
-	returnValue.range = 0.f;
+	returnValue.range = 0;
 	returnValue.hitOrigin = float3(0,0,0);
 	float epsilon = 0.000001f;
 	float t = 0.0f;
@@ -88,12 +88,12 @@ float3 CalcReflection(float3 D, float3 N) {
 	return float3(D - (2 * (dot(D, N)*N)));
 }
 
-float4 RecursiveBounceCalc(float3 origin, float3 direction, int bounceCount) {
-	if (!(bounceCount > 0)) {
-		return float4(0, 0, 0, 0);
-	}
-	//------
-
+struct bounce {
+	float3 bounceOrig;
+	float3 bounceDir;
+	float4 color;
+};
+bounce BounceCalc(float3 origin, float3 direction) {
 	float hitRange = 99999999;
 	int closestTriIndex = -1;
 	float3 closestTriHitOrigin = origin;
@@ -107,12 +107,19 @@ float4 RecursiveBounceCalc(float3 origin, float3 direction, int bounceCount) {
 		}
 	}
 
+	bounce retValue;
 	if (closestTriIndex != 0) {
-		return (StructBufferTriangle[closestTriIndex].color + RecursiveBounceCalc(closestTriHitOrigin, CalcReflection(direction, StructBufferTriangle[closestTriIndex].norm), bounceCount-1)*0.5);
+		retValue.bounceOrig = origin + (direction*hitRange);
+		retValue.bounceDir = CalcReflection(direction, StructBufferTriangle[closestTriIndex].norm);
+		retValue.color = StructBufferTriangle[closestTriIndex].color;
 	}
 	else {
-		return float4(0, 0, 0, 0);
+		retValue.bounceOrig = camPos;
+		retValue.bounceDir = float3(0,0,0);
+		retValue.color = float4(0,0,0,0);
 	}
+
+	return retValue;
 }
 
 [numthreads(32, 32, 1)]
@@ -131,10 +138,18 @@ void main( uint3 threadID : SV_DispatchThreadID ){
 		}
 	}
 
+	//kan troligtvis ersätta allt ovanför detta med koden under...
 	if (closestTriIndex != -1) {
 		float4 finalColor = StructBufferTriangle[closestTriIndex].color * 0.8;
-		float4 bounceColor = RecursiveBounceCalc(closestTriHitOrigin, CalcReflection(camDir, StructBufferTriangle[closestTriIndex].norm), globalBounces);
-		finalColor += bounceColor*0.5;
+		float3 recOrigin = closestTriHitOrigin;
+		float3 recDir = CalcReflection(camDir, StructBufferTriangle[closestTriIndex].norm);
+		for (int i = 0; i < globalBounces; i++) {
+			bounce temp = BounceCalc(recOrigin, recDir);
+			finalColor += temp.color*(0.5 - (0.1*(i + 1)));
+			if ((temp.bounceOrig.x == camPos.x) && (temp.bounceOrig.y == camPos.y) && (temp.bounceOrig.z == camPos.z)) break;
+			recOrigin = temp.bounceOrig;
+			recDir = temp.bounceDir;
+		}
 		output[threadID.xy] = finalColor;
 	}	
 }
