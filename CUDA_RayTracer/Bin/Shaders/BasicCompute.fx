@@ -29,6 +29,8 @@ cbuffer Globals : register(b0){
 	int globalWidth;
 	int globalHeight;
 	int globalBounces;
+	int lightAmount;
+	float padding1, padding2, padding3;
 };
 
 float3 ComputeCameraRay(float pixelX, float pixelY, float3 CamPos, float3 CamLook) {
@@ -84,8 +86,23 @@ hit TriangleTest(float3 origin, float3 direction, int triIndex, float hitRange) 
 	return returnValue;
 }
 
-float3 CalcReflection(float3 D, float3 N) {
+float3 CalcReflectionVector(float3 D, float3 N) {
 	return float3(D - (2 * (dot(D, N)*N)));
+}
+
+float4 CalcColor(int triIndex, float3 intersectionPoint) {
+	float4 color = (float4)(0,0,0,0);
+	float3 n = normalize(intersectionPoint);
+
+	for (int i = 0; i < lightAmount; ++i) {
+		float3 lightDir = StructBufferLight[i].pos.xyz - intersectionPoint;
+		normalize(lightDir);
+		float angle = dot(n, lightDir);
+		if (angle < 0.0f) angle = 0.0f;
+		if (angle > 1.0f) angle = 1.0f;
+		color += (StructBufferTriangle[triIndex].color * angle);
+	}
+	return color;
 }
 
 struct bounce {
@@ -110,12 +127,13 @@ bounce BounceCalc(float3 origin, float3 direction) {
 	bounce retValue;
 	if (closestTriIndex != -1) {
 		retValue.bounceOrig = origin + (direction*hitRange);
-		retValue.bounceDir = CalcReflection(direction, StructBufferTriangle[closestTriIndex].norm);
-		retValue.color = StructBufferTriangle[closestTriIndex].color;
+		retValue.bounceDir = CalcReflectionVector(direction, StructBufferTriangle[closestTriIndex].norm);
+		//retValue.color = StructBufferTriangle[closestTriIndex].color;	//kommer använda CalcColor()
+		retValue.color = CalcColor(closestTriIndex, retValue.bounceOrig);
 	}
 	else {
-		retValue.bounceOrig = camPos;
-		retValue.bounceDir = float3(0,0,0);
+		retValue.bounceOrig = origin;
+		retValue.bounceDir = direction;
 		retValue.color = float4(0,0,0,0);
 	}
 
@@ -125,31 +143,15 @@ bounce BounceCalc(float3 origin, float3 direction) {
 [numthreads(32, 32, 1)]
 void main( uint3 threadID : SV_DispatchThreadID ){
 	float3 newDir = ComputeCameraRay(threadID.x, threadID.y, camPos.xyz, camDir.xyz);
-	float hitRange = 99999999;
-	int closestTriIndex = -1;
-	float3 closestTriHitOrigin = camPos.xyz;
+	float4 finalColor = float4(0,0,0,0);
 
-	for (int i = 0; i < triAmount; ++i) {
-		hit temp = TriangleTest(camPos, newDir, i, hitRange);
-		if (temp.range != 0) {
-			hitRange = temp.range;
-			closestTriHitOrigin = temp.hitOrigin;
-			closestTriIndex = i;
-		}
+	float3 loopOrigin = camPos;
+	float3 loopDir = newDir;
+	for (int i = 0; i < globalBounces; ++i) {
+		bounce thisBounce = BounceCalc(loopOrigin, loopDir);
+		finalColor += thisBounce.color*(0.7 - (0.1*(i + 1)));
+		loopOrigin = thisBounce.bounceOrig;
+		loopDir = thisBounce.bounceDir;
 	}
-
-	//kan troligtvis ersätta allt ovanför detta med koden under...
-	if (closestTriIndex != -1) {
-		float4 finalColor = StructBufferTriangle[closestTriIndex].color * 0.8;
-		float3 recOrigin = closestTriHitOrigin;
-		float3 recDir = CalcReflection(camDir, StructBufferTriangle[closestTriIndex].norm);
-		for (int i = 0; i < globalBounces; i++) {
-			bounce temp = BounceCalc(recOrigin, recDir);
-			finalColor += temp.color*(0.5 - (0.1*(i + 1)));
-			if ((temp.bounceOrig.x == camPos.x) && (temp.bounceOrig.y == camPos.y) && (temp.bounceOrig.z == camPos.z)) break;
-			recOrigin = temp.bounceOrig;
-			recDir = temp.bounceDir;
-		}
-		output[threadID.xy] = finalColor;
-	}	
+	output[threadID.xy] = finalColor;
 }

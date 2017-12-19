@@ -26,7 +26,9 @@ struct globals {
 	int triAmount;				//4
 	int width;					//4
 	int height;					//4
-	int bounces;				//4
+	int bounces;				//4 - 16
+	int lightAmount;			//4
+	float padding1, padding2, padding3;
 };
 
 struct triangle {
@@ -71,7 +73,7 @@ ComputeBuffer* TriangleBuffer = NULL;
 ComputeBuffer* LightBuffer = NULL;
 
 #define NUM_TRIANGLES 3
-#define NUM_LIGHTS 2
+#define NUM_LIGHTS 1
 #define WIDTH 800
 #define HEIGHT 800
 #define NUM_BOUNCES 2
@@ -218,6 +220,7 @@ HRESULT CreateBuffers() {
 	myGlobals.width = WIDTH;
 	myGlobals.height = HEIGHT;
 	myGlobals.bounces = NUM_BOUNCES;
+	myGlobals.lightAmount = NUM_LIGHTS;
 
 	D3D11_BUFFER_DESC GlobalsDesc;
 	memset(&GlobalsDesc, 0, sizeof(GlobalsDesc));
@@ -237,12 +240,12 @@ HRESULT CreateBuffers() {
 	if (FAILED(blob))
 		return blob;
 
+	//TRIANGLE
 	DirectX::XMVECTOR a[3];
 	a[0] = { 0.5,0,0,1 };
 	a[1] = { 0,0.5,0,1 };
 	a[2] = { 0,0,0.5,1 };
 
-	//TRIANGLE
 	for (int i = 0; i < NUM_TRIANGLES; i++)
 		GenerateTriangle(&triArray[i], a[i], true);
 
