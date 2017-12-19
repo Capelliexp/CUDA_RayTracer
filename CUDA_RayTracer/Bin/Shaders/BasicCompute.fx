@@ -9,15 +9,15 @@ struct triStruct {
 	float4 edge1;
 	float4 edge2;
 
-	float4 norm;
-	float4 color;
+	float4 triNorm;
+	float4 triColor;
 };
 StructuredBuffer<triStruct> StructBufferTriangle : register(t0);
 
 struct lightStruct {
-	float4 pos;
-	float4 color;
-	float strength;
+	float4 lightPos;
+	float4 lightColor;
+	float lightStrength;
 	float padding1, padding2, padding3;
 };
 StructuredBuffer<lightStruct> StructBufferLight : register(t1);
@@ -87,28 +87,35 @@ hit TriangleTest(float3 origin, float3 direction, int triIndex, float hitRange) 
 }
 
 float3 CalcReflectionVector(float3 D, float3 N) {
-	return float3(D - (2 * (dot(D, N)*N)));
+	return reflect(D, N);
 }
 
-float4 CalcColor(int triIndex, float3 intersectionPoint) {
-	float4 color = (float4)(0,0,0,0);
-	float3 n = normalize(intersectionPoint);
+float CalcLightPower(int triIndex, float3 intersectionPoint) {
+	float lin = 0.0014;
+	float quadratic = 0.000007;
+
+	float3 triNorm = StructBufferTriangle[triIndex].triNorm.xyz;
+	float power = 0;
+
+	if (triNorm.z > 0) triNorm.z *= -1;
 
 	for (int i = 0; i < lightAmount; ++i) {
-		float3 lightDir = StructBufferLight[i].pos.xyz - intersectionPoint;
-		normalize(lightDir);
-		float angle = dot(n, lightDir);
-		if (angle < 0.0f) angle = 0.0f;
+		float3 lightDir = StructBufferLight[i].lightPos.xyz - intersectionPoint;
+		float distance = length(lightDir);
+		float attenuation = 1.0f / (1 + lin * distance + quadratic * (distance * distance)); //Attenuation
+		lightDir = normalize(lightDir);
+		float angle = dot(triNorm, lightDir);
 		if (angle > 1.0f) angle = 1.0f;
-		color += (StructBufferTriangle[triIndex].color * angle);
+		power += angle * attenuation;
 	}
-	return color;
+	return power;
 }
 
 struct bounce {
+	int triIndex;
 	float3 bounceOrig;
 	float3 bounceDir;
-	float4 color;
+	float calculatedPower;
 };
 bounce BounceCalc(float3 origin, float3 direction) {
 	float hitRange = 99999999;
@@ -126,15 +133,15 @@ bounce BounceCalc(float3 origin, float3 direction) {
 
 	bounce retValue;
 	if (closestTriIndex != -1) {
+		retValue.triIndex = closestTriIndex;
 		retValue.bounceOrig = origin + (direction*hitRange);
-		retValue.bounceDir = CalcReflectionVector(direction, StructBufferTriangle[closestTriIndex].norm);
-		//retValue.color = StructBufferTriangle[closestTriIndex].color;	//kommer använda CalcColor()
-		retValue.color = CalcColor(closestTriIndex, retValue.bounceOrig);
+		retValue.bounceDir = CalcReflectionVector(direction, StructBufferTriangle[closestTriIndex].triNorm);
+		retValue.calculatedPower = CalcLightPower(closestTriIndex, retValue.bounceOrig);
 	}
 	else {
 		retValue.bounceOrig = origin;
 		retValue.bounceDir = direction;
-		retValue.color = float4(0,0,0,0);
+		retValue.calculatedPower = -1;
 	}
 
 	return retValue;
@@ -149,7 +156,9 @@ void main( uint3 threadID : SV_DispatchThreadID ){
 	float3 loopDir = newDir;
 	for (int i = 0; i < globalBounces; ++i) {
 		bounce thisBounce = BounceCalc(loopOrigin, loopDir);
-		finalColor += thisBounce.color*(0.7 - (0.1*(i + 1)));
+		if (thisBounce.calculatedPower != -1) {
+			finalColor += StructBufferTriangle[thisBounce.triIndex].triColor * thisBounce.calculatedPower;
+		}
 		loopOrigin = thisBounce.bounceOrig;
 		loopDir = thisBounce.bounceDir;
 	}

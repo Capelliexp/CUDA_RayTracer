@@ -72,11 +72,11 @@ ID3D11Buffer* globalBuffer;
 ComputeBuffer* TriangleBuffer = NULL;
 ComputeBuffer* LightBuffer = NULL;
 
-#define NUM_TRIANGLES 3
+#define NUM_TRIANGLES 10
 #define NUM_LIGHTS 1
 #define WIDTH 800
 #define HEIGHT 800
-#define NUM_BOUNCES 2
+#define NUM_BOUNCES 1
 
 globals myGlobals;
 triangle triArray[NUM_TRIANGLES];
@@ -241,13 +241,13 @@ HRESULT CreateBuffers() {
 		return blob;
 
 	//TRIANGLE
-	DirectX::XMVECTOR a[3];
-	a[0] = { 0.5,0,0,1 };
-	a[1] = { 0,0.5,0,1 };
-	a[2] = { 0,0,0.5,1 };
+	//DirectX::XMVECTOR a[3];
+	//a[0] = { 1,0,0,1 };
+	//a[1] = { 0,1,0,1 };
+	//a[2] = { 0,0,1,1 };
 
 	for (int i = 0; i < NUM_TRIANGLES; i++)
-		GenerateTriangle(&triArray[i], a[i], true);
+		GenerateTriangle(&triArray[i]/*, a[i], true*/);
 
 	TriangleBuffer = g_ComputeSys->CreateBuffer(STRUCTURED_BUFFER, sizeof(triangle), NUM_TRIANGLES, true, false, triArray);
 
@@ -456,14 +456,15 @@ void GenerateTriangle(triangle* tri, DirectX::XMVECTOR forceColor, bool force) {
 		float blue = (int)rand() % 256;
 		tri->color = { red / 255,green / 255,blue / 255,1 };
 	}
-	
 }
 
 void GenerateLight(light* light) {
 	float x = ((int)rand() % 10 + 1 - 2)*5;
 	float y = ((int)rand() % 10 + 1 - 2)*5;
 	float z = ((int)rand() % 10 + 1 + 20)*10;
-	light->pos = { x,y,z,1 };
+	//light->pos = { x,y,z,1 };
+
+	light->pos = {0,0,0,0};
 
 	/*float red = (int)rand() % 256;
 	float green = (int)rand() % 256;
