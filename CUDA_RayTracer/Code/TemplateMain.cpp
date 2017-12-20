@@ -73,7 +73,7 @@ ComputeBuffer* TriangleBuffer = NULL;
 ComputeBuffer* LightBuffer = NULL;
 
 #define NUM_TRIANGLES 5
-#define NUM_LIGHTS 5
+#define NUM_LIGHTS 1
 #define WIDTH 800
 #define HEIGHT 800
 #define NUM_BOUNCES 2
@@ -208,16 +208,16 @@ HRESULT Init()
 }
 
 HRESULT Update(float deltaTime) {
-	realCamera[0] = DirectX::XMScalarSin(totTime / 3) * 10;
-	myGlobals.CamPos = { realCamera[0], realCamera[1], realCamera[2], 0 };
-	DirectX::XMVECTOR center = { 0, 0, 30, 0 };
-	myGlobals.CamDir = (DirectX::XMVectorSubtract(center, myGlobals.CamPos));
+	//realCamera[0] = DirectX::XMScalarSin(totTime / 3) * 10;
+	//myGlobals.CamPos = { realCamera[0], realCamera[1], realCamera[2], 0 };
+	//DirectX::XMVECTOR center = { 0, 0, 30, 0 };
+	//myGlobals.CamDir = (DirectX::XMVectorSubtract(center, myGlobals.CamPos));
 
-	D3D11_MAPPED_SUBRESOURCE mappedResource1;
-	ZeroMemory(&mappedResource1, sizeof(D3D11_MAPPED_SUBRESOURCE));
-	g_DeviceContext->Map(globalBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource1);
-	memcpy(mappedResource1.pData, &myGlobals, sizeof(myGlobals));
-	g_DeviceContext->Unmap(globalBuffer, 0);
+	//D3D11_MAPPED_SUBRESOURCE mappedResource1;
+	//ZeroMemory(&mappedResource1, sizeof(D3D11_MAPPED_SUBRESOURCE));
+	//g_DeviceContext->Map(globalBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedResource1);
+	//memcpy(mappedResource1.pData, &myGlobals, sizeof(myGlobals));
+	//g_DeviceContext->Unmap(globalBuffer, 0);
 
 	return S_OK;
 }
