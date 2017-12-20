@@ -73,7 +73,7 @@ ComputeBuffer* TriangleBuffer = NULL;
 ComputeBuffer* LightBuffer = NULL;
 
 #define NUM_TRIANGLES 5
-#define NUM_LIGHTS 5
+#define NUM_LIGHTS 1
 #define WIDTH 800
 #define HEIGHT 800
 #define NUM_BOUNCES 2
