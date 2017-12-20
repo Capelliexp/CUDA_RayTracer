@@ -82,7 +82,7 @@ globals myGlobals;
 triangle triArray[NUM_TRIANGLES];
 light lightArray[NUM_LIGHTS];
 float realCamera[3];
-
+float totTime;
 
 int g_Width, g_Height;
 
@@ -207,9 +207,11 @@ HRESULT Init()
 	return S_OK;
 }
 
-HRESULT Update(float deltaTime){
-	realCamera[0] += DirectX::XMScalarSin(deltaTime/1000) * 100;
+HRESULT Update(float deltaTime) {
+	realCamera[0] = DirectX::XMScalarSin(totTime / 3) * 10;
 	myGlobals.CamPos = { realCamera[0], realCamera[1], realCamera[2], 0 };
+	DirectX::XMVECTOR center = { 0, 0, 30, 0 };
+	myGlobals.CamDir = (DirectX::XMVectorSubtract(center, myGlobals.CamPos));
 
 	D3D11_MAPPED_SUBRESOURCE mappedResource1;
 	ZeroMemory(&mappedResource1, sizeof(D3D11_MAPPED_SUBRESOURCE));
@@ -343,6 +345,7 @@ int WINAPI wWinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdL
 
 			//render
 			Update(dt);
+			totTime += dt;
 			Render(dt);
 
 			prevTimeStamp = currTimeStamp;
