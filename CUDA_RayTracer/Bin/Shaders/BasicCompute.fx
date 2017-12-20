@@ -76,7 +76,7 @@ hit TriangleTest(float3 origin, float3 direction, int triIndex, float hitRange) 
 			if (!(v < 0.0f || u + v > 1.0f)) {	//miss?
 				t = f * dot(StructBufferTriangle[triIndex].edge1.xyz, r);
 
-				if (t > 0 && t < hitRange) {	//HIT
+				if (t > 0.01 && t < hitRange) {	//HIT
 					returnValue.range = t;
 					returnValue.hitOrigin = origin + direction*t;
 				}
@@ -157,7 +157,7 @@ void main( uint3 threadID : SV_DispatchThreadID ){
 	for (int i = 0; i < globalBounces; ++i) {
 		bounce thisBounce = BounceCalc(loopOrigin, loopDir);
 		if (thisBounce.calculatedPower != -1) {
-			finalColor += (StructBufferTriangle[thisBounce.triIndex].triColor * thisBounce.calculatedPower)*(0.8-(0.1*i));
+			finalColor += (StructBufferTriangle[thisBounce.triIndex].triColor * thisBounce.calculatedPower)*(0.8-(0.2*i));
 		}
 		loopOrigin = thisBounce.bounceOrig;
 		loopDir = thisBounce.bounceDir;

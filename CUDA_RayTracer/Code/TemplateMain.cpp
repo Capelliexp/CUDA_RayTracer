@@ -72,11 +72,11 @@ ID3D11Buffer* globalBuffer;
 ComputeBuffer* TriangleBuffer = NULL;
 ComputeBuffer* LightBuffer = NULL;
 
-#define NUM_TRIANGLES 10
+#define NUM_TRIANGLES 20
 #define NUM_LIGHTS 1
 #define WIDTH 800
 #define HEIGHT 800
-#define NUM_BOUNCES 2
+#define NUM_BOUNCES 3
 
 globals myGlobals;
 triangle triArray[NUM_TRIANGLES];
@@ -482,10 +482,6 @@ void GenerateLight(light* light) {
 
 	light->pos = {0,0,0,0};
 
-	/*float red = (int)rand() % 256;
-	float green = (int)rand() % 256;
-	float blue = (int)rand() % 256;
-	light->color = { red / 255,green / 255,blue / 255,1 };*/
 	light->color = { 1,1,1,1 };
 
 	light->strength = 100;
