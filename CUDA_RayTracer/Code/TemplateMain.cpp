@@ -72,11 +72,11 @@ ID3D11Buffer* globalBuffer;
 ComputeBuffer* TriangleBuffer = NULL;
 ComputeBuffer* LightBuffer = NULL;
 
-#define NUM_TRIANGLES 20
-#define NUM_LIGHTS 1
+#define NUM_TRIANGLES 5
+#define NUM_LIGHTS 5
 #define WIDTH 800
 #define HEIGHT 800
-#define NUM_BOUNCES 3
+#define NUM_BOUNCES 2
 
 globals myGlobals;
 triangle triArray[NUM_TRIANGLES];
@@ -379,7 +379,7 @@ HRESULT InitWindow( HINSTANCE hInstance, int nCmdShow )
 
 	// Create window
 	g_hInst = hInstance; 
-	RECT rc = { 0, 0, 800, 800 };
+	RECT rc = { 0, 0, WIDTH, HEIGHT };
 	AdjustWindowRect( &rc, WS_OVERLAPPEDWINDOW, FALSE );
 	
 	if(!(g_hWnd = CreateWindow(
@@ -475,12 +475,12 @@ void GenerateTriangle(triangle* tri, DirectX::XMVECTOR forceColor, bool force) {
 }
 
 void GenerateLight(light* light) {
-	float x = ((int)rand() % 10 + 1 - 2)*5;
-	float y = ((int)rand() % 10 + 1 - 2)*5;
-	float z = ((int)rand() % 10 + 1 + 20)*10;
-	//light->pos = { x,y,z,1 };
+	float x = (int)rand() % 10;
+	float y = (int)rand() % 10;
+	float z = ((int)rand() % 10 + 5);
+	light->pos = { x,y,z,1 };
 
-	light->pos = {0,0,0,0};
+	//light->pos = {0,0,20,0};
 
 	light->color = { 1,1,1,1 };
 
