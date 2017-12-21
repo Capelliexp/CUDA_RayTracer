@@ -33,6 +33,8 @@ cbuffer Globals : register(b0){
 	float padding1, padding2, padding3;
 };
 
+//--------------------------------------
+
 float3 ComputeCameraRay(float pixelX, float pixelY, float3 CamPos, float3 CamLook) {
 	float width = globalWidth;
 	float height = globalHeight;

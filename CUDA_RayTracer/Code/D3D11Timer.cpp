@@ -51,7 +51,7 @@ double D3D11Timer::GetTime()
 	{
 		UINT64 delta = endTime - startTime;
 		double frequency = static_cast<double>(disjointData.Frequency);
-		time = (delta / frequency) * 1000.0f;
+		time = 1/((delta / frequency));
 	}
 
 	return time;
